@@ -14,7 +14,7 @@ A simple, standalone Python script that scrapes job listings from LinkedIn.
 *   Ensure you have a `utils.py` file in the same directory containing the `parse_job_card` function.
 *   Install the required libraries:
     ```bash
-    pip install "curl_cffi" beautifulsoup4
+    pip install curl_cffi beautifulsoup4
     ```
 
 ### 2. Configure
