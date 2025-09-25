@@ -39,3 +39,4 @@ A JSON file containing a list of all found jobs will be created in the same dire
 
 
 ### An other script to scrape job details and merge data will be added soon Insha'Allah
+this was made possible by JobSpy : https://github.com/speedyapply/JobSpy
