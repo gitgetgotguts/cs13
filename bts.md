@@ -20,6 +20,46 @@ Your task is to modify the initial script to scrape the **title** and **price** 
 2.  **Do not modify this file.** Instead, create a copy and name it `scraper_all_pages.py`. You will work in this new file.
 3.  Your goal is to modify `scraper_all_pages.py` so that it loops through all 50 pages and collects the data.
 
+
+
+***
+
+### Core Functions and Attributes Cheatsheet
+
+This table lists the most important functions and attributes you will use from the `requests`, `BeautifulSoup`, and `pandas` libraries for this project.
+
+#### `requests` Library
+*Used for fetching the web page content.*
+
+| Function / Attribute    | Description                                                                     | Example Usage                             | [Official Documentation](https://requests.readthedocs.io/en/latest/) |
+| :---------------------- | :------------------------------------------------------------------------------ | :---------------------------------------- | :------------------------------------------------------------------- |
+| **`requests.get(url)`** | Sends a GET request to a URL to retrieve its content.                           | `response = requests.get(URL)`            | [Link to `get` docs](https://requests.readthedocs.io/en/latest/user/quickstart/#make-a-request) |
+| **`.content`**          | The raw HTML content of the response, in bytes.                                 | `soup = BeautifulSoup(response.content)`  | [Link to `.content` docs](https://requests.readthedocs.io/en/latest/user/quickstart/#response-content) |
+| **`.status_code`**      | The HTTP status code of the response. `200` means the request was successful.    | `print(response.status_code)`             | [Link to `.status_code` docs](https://requests.readthedocs.io/en/latest/user/quickstart/#response-status-codes) |
+
+---
+
+#### `BeautifulSoup` Library
+*Used for parsing and navigating the HTML content.*
+
+| Function / Attribute             | Description                                                                                             | Example Usage                                          | [Official Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/) |
+| :------------------------------- | :------------------------------------------------------------------------------------------------------ | :----------------------------------------------------- | :----------------------------------------------------------------------------------- |
+| **`BeautifulSoup(html, ...)`**   | Creates a parseable object from the raw HTML string. This is your first step.                           | `soup = BeautifulSoup(response.content, "html.parser")` | [Link to constructor docs](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#making-the-soup) |
+| **`find(name, class_, ...)`**    | Returns the **first tag** that matches your criteria.                                                   | `container = soup.find(name="ol", class_="row")`       | [Link to `find` docs](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#find) |
+| **`find_all(name, class_, ...)`** | Returns a **list of all tags** that match your criteria. Perfect for looping through multiple items.      | `books = container.find_all(name="li")`                | [Link to `find_all` docs](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#find-all) |
+| **`.text`**                      | An attribute that gets the text content from within a tag, with all HTML tags removed.                  | `title = book.h3.a.text`                               | [Link to `.text` docs](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#text) |
+| **`.get(attribute)`**            | Extracts the value from a tag's attribute (e.g., the `href` from a link or `src` from an image).          | `link = book.h3.a.get("href")`                         | [Link to attribute docs](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#attributes) |
+
+---
+
+#### `pandas` Library
+*Used for organizing and saving your data.*
+
+| Function / Attribute       | Description                                                                                               | Example Usage                               | [Official Documentation](https://pandas.pydata.org/docs/) |
+| :------------------------- | :-------------------------------------------------------------------------------------------------------- | :------------------------------------------ | :---------------------------------------------------------------- |
+| **`pd.DataFrame(data)`**   | Creates a 2D table-like data structure (a DataFrame) from a list of dictionaries or other data types.     | `df = pd.DataFrame(data)`                   | [Link to `DataFrame` docs](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html) |
+| **`df.to_csv(filename)`**  | Writes the DataFrame to a comma-separated values (CSV) file. The `index=False` argument is highly recommended. | `df.to_csv("books.csv", index=False)`       | [Link to `to_csv` docs](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html) |
+
 ---
 
 ## Understanding the HTML Structure (The Hierarchy)
