@@ -34,7 +34,7 @@ This table lists the most important functions and attributes you will use from t
 | Function / Attribute    | Description                                                                     | Example Usage                             | [Official Documentation](https://requests.readthedocs.io/en/latest/) |
 | :---------------------- | :------------------------------------------------------------------------------ | :---------------------------------------- | :------------------------------------------------------------------- |
 | **`requests.get(url)`** | Sends a GET request to a URL to retrieve its content.                           | `response = requests.get(URL)`            | [Link to `get` docs](https://requests.readthedocs.io/en/latest/user/quickstart/#make-a-request) |
-| **`.text`**          | The raw HTML content of the response, in bytes.                                 | `soup = BeautifulSoup(response.text)`  | [Link to `.content` docs](https://requests.readthedocs.io/en/latest/user/quickstart/#response-content) |
+| **`.text`**          | The raw HTML content of the response, in bytes.                                 | `soup = BeautifulSoup(response.text)`  | [Link to `.text` docs](https://requests.readthedocs.io/en/latest/user/quickstart/#response-content) |
 | **`.status_code`**      | The HTTP status code of the response. `200` means the request was successful.    | `print(response.status_code)`             | [Link to `.status_code` docs](https://requests.readthedocs.io/en/latest/user/quickstart/#response-status-codes) |
 
 ---
