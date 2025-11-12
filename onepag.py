@@ -8,8 +8,8 @@ import time
 import sys
 from datetime import datetime
 import json
-LOCATION = "tunisia"
-SEARCH_KEYWORDS = "cyber"
+LOCATION = "egypt"
+SEARCH_KEYWORDS = "data engineer"
 
 logger = logging.getLogger(__name__)
 JOB_SEARCH_PAGE_URL = "https://www.linkedin.com/jobs/search"
@@ -79,6 +79,9 @@ async def main(location=LOCATION, keywords=SEARCH_KEYWORDS):
                     job.update(desc_data)
                 time.sleep(0.5)
         job_list.extend(all_jobs)
+        if page_num>=1:
+            break
+
         logger.info(f"Found {len(all_jobs)} jobs on this page.")
         if len(all_jobs)==0: break
         time.sleep(0.7)
@@ -113,3 +116,4 @@ if __name__ == "__main__":
             logger.info(f"Successfully saved results to {filename}")
         except Exception as e:
             logger.error(f"An error occurred while saving the JSON file: {e}")
+
