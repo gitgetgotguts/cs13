@@ -8,12 +8,42 @@ import time
 import sys
 from datetime import datetime
 import json
-LOCATION = "canada"
-SEARCH_KEYWORDS = "web developer"
+LOCATION = "tunisia"
+SEARCH_KEYWORDS = "cyber"
 
 logger = logging.getLogger(__name__)
 JOB_SEARCH_PAGE_URL = "https://www.linkedin.com/jobs/search"
 JOB_SEARCH_API_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+
+
+async def get_job_desc(session, job_link):
+    try:
+        response = await  session.get(
+            f"https://www.linkedin.com/jobs/view/{job_link.split('-')[-1]}", timeout=5
+        )
+    except:
+        return None
+    if "linkedin.com/signup" in response.url:
+        return None
+
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    description_text = None
+    description_div = soup.find("div", class_="description__text")
+    if description_div:
+        description_text = description_div.get_text(separator='\n', strip=True)
+
+    job_function = None
+    h3_tag = soup.find("h3", string=lambda text: text and "Job function" in text.strip())
+    if h3_tag:
+        span_tag = h3_tag.find_next("span")
+        if span_tag:
+            job_function = span_tag.text.strip()
+
+    return {
+        "description": description_text,
+       "job_function": job_function,
+    }
 async def main(location=LOCATION, keywords=SEARCH_KEYWORDS):
     session = AsyncSession(impersonate="chrome120")
     logger.info(f"Starting LinkedIn job search for '{keywords}' in '{location}'...")
@@ -40,6 +70,14 @@ async def main(location=LOCATION, keywords=SEARCH_KEYWORDS):
         job_cards = soup.find_all("div", class_="base-search-card")
 
         all_jobs = [parse_job_card(card) for card in job_cards]
+        print("getting job descriptions...")
+
+        for job in all_jobs:
+            if job['job_url']:
+                desc_data = await get_job_desc(session, job['job_url'])
+                if desc_data:
+                    job.update(desc_data)
+                time.sleep(0.5)
         job_list.extend(all_jobs)
         logger.info(f"Found {len(all_jobs)} jobs on this page.")
         if len(all_jobs)==0: break
