@@ -3,3 +3,5 @@
 
 # ...but DO NOT ignore the .gitignore file itself
 !/.gitignore
+useful_resources
+finetuning
