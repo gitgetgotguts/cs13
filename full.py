@@ -8,6 +8,7 @@ import time
 import sys
 from datetime import datetime
 import json
+from enrich_data import enrich_json
 LOCATION = "tunisia"
 SEARCH_KEYWORDS = "cyber"
 
@@ -99,7 +100,7 @@ if __name__ == "__main__":
     found_jobs = asyncio.run(main())
 
     print(f"Total jobs found: {len(found_jobs)}")
-
+    sucess=0
     # --- SAVE TO JSON LOGIC ---
     if not found_jobs:
         logger.warning("No jobs found, JSON file will not be created.")
@@ -111,5 +112,8 @@ if __name__ == "__main__":
                 json.dump(found_jobs, f, ensure_ascii=False, indent=4)
 
             logger.info(f"Successfully saved results to {filename}")
+            sucess=1
         except Exception as e:
             logger.error(f"An error occurred while saving the JSON file: {e}")
+    if sucess:
+        enrich_json(filename)
