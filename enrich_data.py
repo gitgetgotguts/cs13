@@ -37,7 +37,7 @@ Your response must be ONLY the valid JSON object.
   "hard_skills": ["string"],
   "domain_keywords": ["string"],
   "job_title": "string",
-  "required_min_years": "integer | null"
+  "required_min_years": "integer | null" 
 }
 
 *   **`match_context`**:
