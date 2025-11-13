@@ -3,16 +3,28 @@ import pandas as pd
 import json
 import re
 import os
+import torch
+from sentence_transformers import SentenceTransformer
+import ast
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 # THIS SCRIPT TAkes a dataset created by the full script and adds colums : 'match_context', 'hard_skills', 'domain_keywords', 'job_title', 'required_min_years' to the dataset using an LLM
-filename='20251103_200732_tunisia_data_science.json'
-client = OpenAI(base_url="https://api.llm7.io/v1",api_key="4LPcl/IAgbPijsDc3iQXFSSYy9Mb1Xj1ieIZnRb1ZDtzNDW0Kmwisz7mphyed3oN+srfcqMqx2PnbOc19cvE0TgJE02HeZgndZPxUU5haEVpOCKj0Fq3xTrUZaSirYgxUSE=")
-df = pd.read_json(filename)
-
-
-JOB_EXTRACTION_PROMPT ='''You are a seasoned Principal Engineer acting as a hiring manager. Your task is to review a job description and distill it into a structured JSON object for an internal recruiting tool. Your primary goal is to identify the true, non-negotiable technical requirements.
+MODEL_NAME = 'all-MiniLM-L6-v2'
+filename="20251103_184153_egypt_data_engineer.json"
+ERROR_STRUCTURE = {
+    "match_context": None,
+    "hard_skills": [],
+    "domain_keywords": [],
+    "job_title": None,
+    "required_min_years": None
+}
+# --- 3. Define the Robust LLM Worker Function ---
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(3))
+def get_structured_job_data(description: str) -> dict:
+    """Takes a job description string and returns a structured dictionary."""
+    JOB_EXTRACTION_PROMPT ='''You are a seasoned Principal Engineer acting as a hiring manager. Your task is to review a job description and distill it into a structured JSON object for an internal recruiting tool. Your primary goal is to identify the true, non-negotiable technical requirements.
 
 Your response must be ONLY the valid JSON object.
 
@@ -62,20 +74,8 @@ ABSOLUTELY CRITICAL - READ THIS CAREFULLY:
 Review the following job description and produce the JSON object.
 
 **Job Description Text:**'''
-ERROR_STRUCTURE = {
-    "match_context": None,
-    "hard_skills": [],
-    "domain_keywords": [],
-    "job_title": None,
-    "required_min_years": None
-}
+    client = OpenAI(base_url="https://api.llm7.io/v1",api_key="4LPcl/IAgbPijsDc3iQXFSSYy9Mb1Xj1ieIZnRb1ZDtzNDW0Kmwisz7mphyed3oN+srfcqMqx2PnbOc19cvE0TgJE02HeZgndZPxUU5haEVpOCKj0Fq3xTrUZaSirYgxUSE=")
 
-
-
-# --- 3. Define the Robust LLM Worker Function ---
-@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(3))
-def get_structured_job_data(description: str) -> dict:
-    """Takes a job description string and returns a structured dictionary."""
     if not isinstance(description, str) or not description.strip():
         return ERROR_STRUCTURE
     try:
@@ -96,7 +96,9 @@ def get_structured_job_data(description: str) -> dict:
         # Catching any exception during the API call or parsing
         print(f"A single request failed with error: {e}")
         return ERROR_STRUCTURE
-def main():
+def enrich_json(filename):
+    df = pd.read_json(filename)
+
     texts_to_process = df["description"].fillna('').tolist()
     results_list = [None] * len(texts_to_process)
     MAX_CONCURRENT_REQUESTS=5
@@ -119,11 +121,32 @@ def main():
     # --- 5. Unpack and Join Results ---
     extracted_df = pd.json_normalize(results_list)
 
-    # MODIFIED: No need to clean column names, as the schema is already flat.
-    # The `json_normalize` function will create the columns we want directly.
-
     # Join the new structured data with the original DataFrame
     final_df = df.join(extracted_df)
+
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f"Using device: {device}")
+
+    print(f"Loading multilingual embedding model: {MODEL_NAME}...")
+    model = SentenceTransformer(MODEL_NAME, device=device)
+    print("Model loaded successfully.")
+
+    texts_to_embed = final_df["match_context"].fillna('').tolist()
+    all_embeddings = []
+    BATCH_SIZE=32
+    all_embeddings = model.encode(
+        texts_to_embed,
+        batch_size=BATCH_SIZE,
+        show_progress_bar=True,
+        normalize_embeddings=True # Normalizing is essential for accurate cosine similarity.
+    )
+    # Add the embeddings as a new column.
+    # We must convert the numpy array for each embedding into a simple list to save it in the CSV.
+    final_df['embedding'] = [emb.tolist() for emb in all_embeddings]
+
+
+
     OUTPUT_CSV_PATH=f"enriched_{filename.split('.')[0]}.csv"
     # --- 6. Save the Final, Enriched Dataset ---
     try:
@@ -132,5 +155,5 @@ def main():
         print("\nFinal DataFrame columns:", final_df.columns.tolist())
     except Exception as e:
         print(f"❌ ERROR: Failed to save the new CSV file. Reason: {e}")
-
-main()
+if __name__=="__main__":
+    enrich_json(filename)
